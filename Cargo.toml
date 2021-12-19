@@ -16,7 +16,6 @@ serde = {version = "1", features = ["derive"]}
 thiserror = {version = "1"}
 tokio = {version = "1", features = ["full"]}
 tower = {version = "^0.4"}
-sea-orm = {version = "^0", features = ["sqlx-mysql", "runtime-tokio-native-tls", "macros"], default-features = false}
 reqwest = { version = "0.11", features = ["json", "cookies", "gzip", "stream", "socks"] }
 regex = "1"
 lazy_static = "1.4.0"
