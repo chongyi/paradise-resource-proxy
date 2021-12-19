@@ -24,3 +24,6 @@ anyhow = "1.0"
 nipper = "0.1.9"
 js-sandbox = "0.1.6"
 headers = "^0.3"
+
+[target.'cfg(unix)'.dependencies]
+daemonize-me = "1"

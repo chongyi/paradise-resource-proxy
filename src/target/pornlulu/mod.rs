@@ -71,7 +71,7 @@ async fn get_post_list(
 
     match result {
         Some(list) => Json(json!({
-            "has_more": list.current == list.last,
+            "has_more": list.current != list.last,
             "data": list.items.into_iter().map(|item| json!({
                 "id": item.id,
                 "title": item.title,
