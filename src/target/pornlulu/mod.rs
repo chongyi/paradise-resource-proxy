@@ -43,10 +43,15 @@ async fn get_category_list(TypedHeader(user_agent): TypedHeader<UserAgent>) -> J
     )
 }
 
+#[derive(Deserialize)]
+pub struct Paginate {
+    page: u32,
+}
+
 async fn get_post_list(
     TypedHeader(user_agent): TypedHeader<UserAgent>,
     Path((category_id,)): Path<(u32,)>,
-    Query((page,)): Query<(u32,)>,
+    Query(Paginate { page }): Query<Paginate>,
 ) -> Json<Value> {
     let client = Client::builder().user_agent(user_agent.as_str()).build();
 

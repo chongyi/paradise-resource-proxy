@@ -1,3 +1,6 @@
+#[macro_use]
+extern crate serde;
+
 use axum::Router;
 
 mod target;
