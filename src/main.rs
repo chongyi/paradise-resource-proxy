@@ -9,6 +9,8 @@ use tokio::runtime::Runtime;
 mod target;
 
 fn main() {
+    dotenv::dotenv().ok();
+    
     if cfg!(target_family = "windows") {
         start_server_with_runtime()
     } else {
