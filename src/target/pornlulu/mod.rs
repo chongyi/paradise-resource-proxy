@@ -100,6 +100,9 @@ async fn get_post(
 
     match result {
         Some(post) => Json(json!({
+            "title": post.title,
+            "keywords": post.keywords,
+            "description": post.description,
             "content": serde_json::to_string(&json!({
                 "source": post.source
             })).unwrap()
