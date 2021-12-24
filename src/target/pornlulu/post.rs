@@ -18,6 +18,7 @@ pub struct PostTagRawItem {
 
 #[derive(Debug, Clone)]
 pub struct PostRaw {
+    pub title: String,
     pub keywords: String,
     pub description: String,
     pub source: String,
@@ -52,6 +53,7 @@ pub async fn get_post(client: Client, path: &str) -> Result<Option<PostRaw>> {
         vec![]
     };
 
+    let title = document.select("body > div.wrapper > div.content-wrapper > div > div > h1 > a").text().trim().to_string();
     let keywords = tags.iter()
         .map(|item| item.name.as_str()).collect::<Vec<&str>>().join(",")
         .to_string();
@@ -77,6 +79,7 @@ pub async fn get_post(client: Client, path: &str) -> Result<Option<PostRaw>> {
             .ok_or(anyhow::Error::msg("Captures (actual script -> source) failed."))?;
 
         Ok(Some(PostRaw {
+            title,
             keywords,
             description,
             source: source[1].to_string(),
