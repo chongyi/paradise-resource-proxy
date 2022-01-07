@@ -5,15 +5,20 @@ use std::env;
 
 use axum::Router;
 use tokio::runtime::Runtime;
+pub use error::{Error, Result};
 
 mod target;
+pub mod error;
 
 fn main() {
     dotenv::dotenv().ok();
-    
-    if cfg!(target_family = "windows") {
-        start_server_with_runtime()
-    } else {
+    env_logger::init();
+
+    #[cfg(target_family = "windows")]
+    start_server_with_runtime();
+
+    #[cfg(target_family = "unix")]
+    {
         use daemonize_me::Daemon;
 
         let is_daemon = env::var("PARADISE_PROXY_DAEMON")
@@ -46,7 +51,9 @@ fn start_server_with_runtime() {
 async fn start_server() {
     log::info!("start server now.");
 
-    let router = Router::new().nest("/pornlulu", target::pornlulu::routes());
+    let router = Router::new()
+        .nest("/pornlulu", target::pornlulu::routes())
+        .nest("/baihua", target::baihua::routes());
 
     axum::Server::bind(&"0.0.0.0:8010".parse().unwrap())
         .serve(router.into_make_service())
