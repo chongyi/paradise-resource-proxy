@@ -4,8 +4,10 @@ use axum::{Router, AddExtensionLayer, routing::get};
 use reqwest::{Client, cookie};
 
 use self::common::login;
+use self::post::*;
 
-pub mod category;
+pub mod catcher;
+pub mod post;
 pub mod common;
 
 pub fn routes() -> Router {
@@ -18,5 +20,9 @@ pub fn routes() -> Router {
 
     Router::new()
         .route("/login", get(login))
+        .route("/category/:page/last-page", get(get_category_last_page))
+        .route("/category", get(get_categories))
+        .route("/category/:page/posts", get(get_base_posts))
+        .route("/page/:page", get(get_post))
         .layer(AddExtensionLayer::new(client))
 }

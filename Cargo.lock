@@ -110,6 +110,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "axum-debug"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "c9db5dc4828d357f9b15df085afe0271d26d3a831c01361260e73bfbbb327b8f"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "base-x"
 version = "0.2.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1036,6 +1047,7 @@ dependencies = [
  "anyhow",
  "async-trait",
  "axum",
+ "axum-debug",
  "daemonize-me",
  "dotenv",
  "env_logger",
@@ -1052,6 +1064,7 @@ dependencies = [
  "thiserror",
  "tokio",
  "tower",
+ "url",
 ]
 
 [[package]]

@@ -4,8 +4,12 @@ pub type Result<T, E = Error> = std::result::Result<T, E>;
 
 #[derive(Debug, thiserror::Error)]
 pub enum Error {
+    #[error("Custom error msg: {0}")]
+    CustomStrError(&'static str),
     #[error(transparent)]
-    ReqwestError(#[from] reqwest::Error)
+    ReqwestError(#[from] reqwest::Error),
+    #[error(transparent)]
+    UrlParseError(#[from] url::ParseError)
 }
 
 #[derive(Serialize)]
