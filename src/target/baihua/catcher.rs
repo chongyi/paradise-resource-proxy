@@ -1,7 +1,7 @@
+use lazy_static::lazy_static;
 use nipper::Document;
 use regex::Regex;
 use reqwest::{Client, Url};
-use lazy_static::lazy_static;
 
 use crate::{Error, Result};
 
@@ -22,6 +22,9 @@ pub struct Post {
     title: String,
     post: String,
     images: Vec<String>,
+    hidden: String,
+    content: Vec<String>,
+    secret_content: Vec<String>,
     comments: Vec<PostComment>,
 }
 
@@ -41,7 +44,6 @@ pub trait Catcher {
 lazy_static! {
     static ref GET_PAGE: Regex = Regex::new("\\d+").unwrap();
 }
-
 
 #[async_trait]
 impl Catcher for Client {
@@ -74,10 +76,7 @@ impl Catcher for Client {
 
     async fn get_category_last_page(&self, cat_path: String) -> Result<u64> {
         let html = self
-            .get(&format!(
-                "http://bhc339.top/archiver/{}",
-                cat_path
-            ))
+            .get(&format!("http://bhc339.top/archiver/{}", cat_path))
             .send()
             .await?
             .text()
@@ -86,22 +85,29 @@ impl Catcher for Client {
         let full_cat_path = {
             let document = Document::from(&html);
 
-            document.select("#end > a").attr("href").ok_or(Error::CustomStrError("找不到地址"))?.to_string()
+            document
+                .select("#end > a")
+                .attr("href")
+                .ok_or(Error::CustomStrError("找不到地址"))?
+                .to_string()
         };
 
         let url = Url::parse("http://bhc339.top/archiver").unwrap();
-        let url = url.join(&full_cat_path).or(Err(Error::CustomStrError("设置文章分类页地址错误")))?;
-        
-        let html = self.get(url)
-            .send()
-            .await?
+        let url = url
+            .join(&full_cat_path)
+            .or(Err(Error::CustomStrError("设置文章分类页地址错误")))?;
+
+        let html = self.get(url).send().await?.text().await?;
+
+        let document = Document::from(&html);
+        let last_page = document
+            .select("#fd_page_bottom > div > a.last")
             .text()
-            .await?;
+            .to_string();
 
-        let document =Document::from(&html);
-        let last_page = document.select("#fd_page_bottom > div > a.last").text().to_string();
-
-        let page = GET_PAGE.captures(&last_page).map(|caps| caps[0].parse::<u64>().unwrap_or(1))
+        let page = GET_PAGE
+            .captures(&last_page)
+            .map(|caps| caps[0].parse::<u64>().unwrap_or(1))
             .unwrap_or(1);
         Ok(page)
     }
@@ -143,11 +149,19 @@ impl Catcher for Client {
 
         let title = document.select("#thread_subject").text().to_string();
         let post = document.select(".t_f");
-        let images = document
-            .select(".pattl img.zoom")
-            .iter()
-            .filter_map(|item| item.attr("file").map(|v| v.to_string()))
-            .collect();
+
+        let images_selection = document.select(".pattl img.zoom");
+        let images = if images_selection.length() > 0 {
+            images_selection
+                .iter()
+                .filter_map(|item| item.attr("file").map(|v| v.to_string()))
+                .collect()
+        } else {
+            post.select("img.zoom")
+                .iter()
+                .filter_map(|item| item.attr("file").map(|v| v.to_string()))
+                .collect()
+        };
 
         let mut post_iter = post.iter();
 
@@ -160,11 +174,48 @@ impl Catcher for Client {
             })
             .collect();
 
+        // main post 内容替换检查和清理
+        let hidden = main_post.select(".showhide").text().to_string();
+        main_post.select("ignore_js_op").remove();
+        main_post.select(".showhide").remove();
+        let content: Vec<String> = main_post
+            .text()
+            .to_string()
+            .split("\n")
+            .map(|v| v.trim())
+            .filter(|v| !v.is_empty())
+            .map(|v| v.to_string())
+            .collect();
+
+        let (secret_content, content) = content
+            .into_iter()
+            .partition(|s| {
+                s.contains("微信")
+                    || s.contains("QQ")
+                    || s.contains("电话")
+                    || s.contains("地址")
+                    || s.contains("联系")
+                    || s.contains("qq")
+                    || s.contains("Qq")
+                    || s.contains("qQ")
+                    || s.contains("wx")
+                    || s.contains("WX")
+                    || s.contains("Wx")
+                    || s.contains("wX")
+                    || s.contains("企鹅")
+                    || s.contains("tel")
+                    || s.contains("Tel")
+                    || s.contains("TEL")
+            });
+
         Ok(Post {
             title,
             post: main_post.html().to_string(),
             images,
             comments,
+            hidden,
+            content,
+            secret_content,
         })
     }
 }
